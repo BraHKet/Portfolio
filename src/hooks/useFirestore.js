@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { 
   collection, 
   doc, 
@@ -12,15 +12,20 @@ import {
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
-// Custom hook for Firestore operations
 export const useFirestore = (collectionName) => {
   const [documents, setDocuments] = useState([]);
   const [document, setDocument] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [lastFetch, setLastFetch] = useState(null);
 
   // Get all documents from collection
-  const getDocuments = async (orderByField = 'createdAt') => {
+  const getDocuments = useCallback(async (orderByField = 'createdAt', forceRefresh = false) => {
+    // If we already have documents and not forcing refresh, return them
+    if (documents.length > 0 && !forceRefresh) {
+      return documents;
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -35,6 +40,7 @@ export const useFirestore = (collectionName) => {
       }));
       
       setDocuments(docs);
+      setLastFetch(new Date());
       return docs;
     } catch (err) {
       console.error('Error getting documents:', err);
@@ -43,10 +49,10 @@ export const useFirestore = (collectionName) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [collectionName, documents]);
 
   // Get a single document by ID
-  const getDocument = async (id) => {
+  const getDocument = useCallback(async (id) => {
     setLoading(true);
     setError(null);
     
@@ -63,6 +69,7 @@ export const useFirestore = (collectionName) => {
         setDocument(data);
         return data;
       } else {
+        setDocument(null);
         setError('Document not found');
         return null;
       }
@@ -73,10 +80,10 @@ export const useFirestore = (collectionName) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [collectionName]);
 
   // Add a new document
-  const addDocument = async (data) => {
+  const addDocument = useCallback(async (data) => {
     setLoading(true);
     setError(null);
     
@@ -87,6 +94,9 @@ export const useFirestore = (collectionName) => {
         createdAt: new Date()
       });
       
+      // Refresh documents after adding
+      getDocuments(undefined, true);
+      
       return { id: docRef.id, ...data };
     } catch (err) {
       console.error('Error adding document:', err);
@@ -95,10 +105,10 @@ export const useFirestore = (collectionName) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [collectionName, getDocuments]);
 
   // Update an existing document
-  const updateDocument = async (id, data) => {
+  const updateDocument = useCallback(async (id, data) => {
     setLoading(true);
     setError(null);
     
@@ -109,6 +119,9 @@ export const useFirestore = (collectionName) => {
         updatedAt: new Date()
       });
       
+      // Refresh documents after updating
+      getDocuments(undefined, true);
+      
       return { id, ...data };
     } catch (err) {
       console.error('Error updating document:', err);
@@ -117,16 +130,20 @@ export const useFirestore = (collectionName) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [collectionName, getDocuments]);
 
   // Delete a document
-  const deleteDocument = async (id) => {
+  const deleteDocument = useCallback(async (id) => {
     setLoading(true);
     setError(null);
     
     try {
       const docRef = doc(db, collectionName, id);
       await deleteDoc(docRef);
+      
+      // Refresh documents after deleting
+      getDocuments(undefined, true);
+      
       return true;
     } catch (err) {
       console.error('Error deleting document:', err);
@@ -135,7 +152,14 @@ export const useFirestore = (collectionName) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [collectionName, getDocuments]);
+
+  // Initial fetch
+  useEffect(() => {
+    if (!lastFetch) {
+      getDocuments();
+    }
+  }, [getDocuments, lastFetch]);
 
   return {
     documents,

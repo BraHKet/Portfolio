@@ -27,15 +27,21 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is admin
   const checkAdminStatus = async (user) => {
-    if (!user) {
-      setIsAdmin(false);
-      return;
-    }
-    
-    // Get the ID token with fresh claims
-    const token = await user.getIdTokenResult(true);
-    setIsAdmin(!!token.claims.admin);
-  };
+  if (!user) {
+    setIsAdmin(false);
+    return;
+  }
+  
+  // Soluzione temporanea: considera questo utente specifico come admin
+  if (user.email === 'lore.mail.gl@gmail.com') {
+    setIsAdmin(true);
+    return;
+  }
+  
+  // Ottieni il token ID con claims aggiornati
+  const token = await user.getIdTokenResult(true);
+  setIsAdmin(!!token.claims.admin);
+};
 
   // Effect to handle auth state changes
   useEffect(() => {
