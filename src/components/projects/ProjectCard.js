@@ -6,15 +6,15 @@ import { FaArrowRight } from 'react-icons/fa';
 const ProjectCard = ({ project, index }) => {
   const { id, title, description, imageUrl, tags, status } = project;
 
-  // Get status label and color
+  // Get status label and color - UPDATED: replaced 'planning' with 'archived'
   const getStatusInfo = (status) => {
     switch(status) {
       case 'completed':
         return { label: 'Completato', color: 'bg-green-500' };
       case 'in-progress':
         return { label: 'In Corso', color: 'bg-blue-500' };
-      case 'planning':
-        return { label: 'In Pianificazione', color: 'bg-yellow-500' };
+      case 'archived':
+        return { label: 'Archiviato', color: 'bg-gray-500' };
       default:
         return { label: 'Sconosciuto', color: 'bg-gray-500' };
     }

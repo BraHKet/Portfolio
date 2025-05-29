@@ -1,7 +1,7 @@
 // src/components/projects/ProjectGrid.js
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaCheck, FaSpinner, FaRegClock } from 'react-icons/fa';
+import { FaCheck, FaSpinner, FaArchive } from 'react-icons/fa';
 import { useFirestore } from '../../hooks/useFirestore';
 import ProjectCard from './ProjectCard';
 
@@ -141,15 +141,15 @@ const ProjectGrid = () => {
             
             <motion.button
               className={`px-4 py-2 rounded-lg font-medium border flex items-center ${
-                statusFilter === 'planning' 
-                  ? 'bg-yellow-500 text-white border-yellow-500' 
-                  : 'border-light-300 text-dark-600 hover:border-yellow-500 hover:text-yellow-700'
+                statusFilter === 'archived' 
+                  ? 'bg-gray-500 text-white border-gray-500' 
+                  : 'border-light-300 text-dark-600 hover:border-gray-500 hover:text-gray-700'
               } transition-colors duration-300`}
-              onClick={() => handleStatusFilterChange('planning')}
+              onClick={() => handleStatusFilterChange('archived')}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
             >
-              <FaRegClock className="mr-2" /> In Pianificazione
+              <FaArchive className="mr-2" /> Archiviati
             </motion.button>
           </div>
         </div>

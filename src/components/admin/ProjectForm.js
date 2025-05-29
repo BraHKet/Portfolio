@@ -23,7 +23,7 @@ const ProjectForm = ({ project = null }) => {
     repoUrl: '',
     demoUrl: '',
     date: new Date(),
-    status: 'completed', // completed, in-progress, planning
+    status: 'completed', // completed, in-progress, archived
     teamMembers: [],
     client: '',
     duration: '',
@@ -46,11 +46,11 @@ const ProjectForm = ({ project = null }) => {
   // Toast notification state
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
   
-  // Status options
+  // Status options - UPDATED: replaced 'planning' with 'archived'
   const statusOptions = [
     { value: 'completed', label: 'Completato' },
     { value: 'in-progress', label: 'In Corso' },
-    { value: 'planning', label: 'In Pianificazione' }
+    { value: 'archived', label: 'Archiviato' }
   ];
   
   // Populate form data when editing

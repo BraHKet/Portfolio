@@ -13,18 +13,18 @@ const HeroSection = () => {
   ];
 
   return (
-    <section className="py-16 md:py-24 overflow-hidden">
+    <section className="py-8 md:py-16 lg:py-24 overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="flex flex-col lg:flex-row items-center justify-between lg:gap-12">
           {/* Left Column: Text Content */}
           <motion.div 
-            className="lg:w-1/2 z-10 order-2 lg:order-1 mt-12 lg:mt-0"
+            className="lg:w-1/2 z-10 order-2 lg:order-1 mt-8 lg:mt-0"
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
           >
             <motion.h1 
-              className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6"
+              className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-4 md:mb-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}
@@ -33,7 +33,7 @@ const HeroSection = () => {
             </motion.h1>
             
             <motion.div 
-              className="flex flex-wrap gap-3 mb-6"
+              className="flex flex-wrap gap-2 md:gap-3 mb-4 md:mb-6"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.8 }}
@@ -41,7 +41,7 @@ const HeroSection = () => {
               {skills.map((skill, index) => (
                 <span 
                   key={index} 
-                  className={`skill-tag ${skill.color}`}
+                  className={`skill-tag ${skill.color} text-sm md:text-base`}
                 >
                   {skill.name}
                 </span>
@@ -49,7 +49,7 @@ const HeroSection = () => {
             </motion.div>
             
             <motion.div
-              className="bg-dark-800 text-white px-5 py-3 rounded-xl inline-flex items-center mb-8"
+              className="bg-dark-800 text-white px-4 md:px-5 py-2 md:py-3 rounded-xl inline-flex items-center mb-6 md:mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
@@ -71,13 +71,13 @@ const HeroSection = () => {
           
           {/* Right Column: Image with Shape */}
           <motion.div 
-            className="lg:w-1/2 order-1 lg:order-2 relative"
+            className="lg:w-1/2 order-1 lg:order-2 relative mb-8 lg:mb-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
           >
-            {/* Background Shape */}
-            <div className="absolute inset-0 -right-20 -top-20 z-0">
+            {/* Background Shape - Hidden on mobile to prevent overlap */}
+            <div className="absolute inset-0 -right-20 -top-20 z-0 hidden md:block">
               <motion.div
                 className="w-[140%] h-[140%] bg-primary-500 rounded-full opacity-90"
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -86,29 +86,29 @@ const HeroSection = () => {
               />
             </div>
             
-            {/* Profile Image - Usa la tua foto importata */}
+            {/* Profile Image - Responsive sizing */}
             <motion.div 
-              className="relative z-10 rounded-full overflow-hidden border-4 border-white shadow-xl w-72 h-72 md:w-96 md:h-96 mx-auto"
+              className="relative z-10 rounded-full overflow-hidden border-4 border-white shadow-xl w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 mx-auto"
               initial={{ y: 30, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5, duration: 0.8 }}
             >
               <img 
                 src={profileImage} 
-                alt="Your Name - Profile" 
+                alt="Lorenzo - Profile" 
                 className="w-full h-full object-cover"
               />
             </motion.div>
             
-            {/* Experience Badge */}
+            {/* Experience Badge - Repositioned for mobile */}
             <motion.div 
-              className="absolute top-5 lg:top-16 right-10 lg:right-0 bg-dark-800 text-white px-5 py-3 rounded-xl flex items-center shadow-lg z-20"
+              className="absolute top-2 right-4 md:top-5 lg:top-16 md:right-10 lg:right-0 bg-dark-800 text-white px-3 md:px-5 py-2 md:py-3 rounded-xl flex items-center shadow-lg z-20"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1, duration: 0.5 }}
             >
               <span className="font-bold mr-2">28</span> 
-              <span className="text-sm">Years old</span>
+              <span className="text-xs md:text-sm">Years old</span>
             </motion.div>
           </motion.div>
         </div>
