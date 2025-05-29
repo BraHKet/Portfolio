@@ -4,7 +4,21 @@ import { motion } from 'framer-motion';
 import { FaArrowRight } from 'react-icons/fa';
 
 const ProjectCard = ({ project, index }) => {
-  const { id, title, description, imageUrl, tags } = project;
+  const { id, title, description, imageUrl, tags, status } = project;
+
+  // Get status label and color
+  const getStatusInfo = (status) => {
+    switch(status) {
+      case 'completed':
+        return { label: 'Completato', color: 'bg-green-500' };
+      case 'in-progress':
+        return { label: 'In Corso', color: 'bg-blue-500' };
+      case 'planning':
+        return { label: 'In Pianificazione', color: 'bg-yellow-500' };
+      default:
+        return { label: 'Sconosciuto', color: 'bg-gray-500' };
+    }
+  };
 
   return (
     <Link to={`/projects/${id}`}>
@@ -29,6 +43,15 @@ const ProjectCard = ({ project, index }) => {
               {String(index + 1).padStart(2, '0')}
             </div>
           </div>
+          
+          {/* Status Badge */}
+          {status && (
+            <div className="absolute top-4 right-4">
+              <div className={`px-2 py-1 rounded-lg text-xs text-white font-medium ${getStatusInfo(status).color}`}>
+                {getStatusInfo(status).label}
+              </div>
+            </div>
+          )}
           
           {/* View Details Overlay */}
           <div className="absolute inset-0 bg-dark-800 bg-opacity-60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">

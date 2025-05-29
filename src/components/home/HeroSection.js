@@ -29,7 +29,7 @@ const HeroSection = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.8 }}
             >
-              My name is <span className="block">Jacob</span>
+              My name is <span className="block">Lorenzo</span>
             </motion.h1>
             
             <motion.div 
@@ -107,8 +107,8 @@ const HeroSection = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1, duration: 0.5 }}
             >
-              <span className="font-bold mr-2">10+</span> 
-              <span className="text-sm">Years<br/>Experience</span>
+              <span className="font-bold mr-2">28</span> 
+              <span className="text-sm">Years old</span>
             </motion.div>
           </motion.div>
         </div>

@@ -1,13 +1,15 @@
 // src/components/projects/ProjectGrid.js
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { FaCheck, FaSpinner, FaRegClock } from 'react-icons/fa';
 import { useFirestore } from '../../hooks/useFirestore';
+import ProjectCard from './ProjectCard';
 
 const ProjectGrid = () => {
   const { documents: projects, loading, error, getDocuments } = useFirestore('projects');
   const [filter, setFilter] = useState('all');
   const [filteredProjects, setFilteredProjects] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('all');
   const [mounted, setMounted] = useState(false);
   
   // Get all tags from projects
@@ -44,20 +46,33 @@ const ProjectGrid = () => {
   useEffect(() => {
     if (!projects) return;
     
-    if (filter === 'all') {
-      setFilteredProjects(projects);
-    } else {
-      setFilteredProjects(
-        projects.filter(project => 
-          project.tags && project.tags.includes(filter)
-        )
+    let filtered = [...projects];
+    
+    // Apply tag filter
+    if (filter !== 'all') {
+      filtered = filtered.filter(project => 
+        project.tags && project.tags.includes(filter)
       );
     }
-  }, [filter, projects]);
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(project => 
+        project.status === statusFilter
+      );
+    }
+    
+    setFilteredProjects(filtered);
+  }, [filter, statusFilter, projects]);
   
-  // Handle filter change
-  const handleFilterChange = (newFilter) => {
+  // Handle tag filter change
+  const handleTagFilterChange = (newFilter) => {
     setFilter(newFilter);
+  };
+  
+  // Handle status filter change
+  const handleStatusFilterChange = (newFilter) => {
+    setStatusFilter(newFilter);
   };
 
   // Container animation settings
@@ -77,59 +92,105 @@ const ProjectGrid = () => {
     }
   };
 
-  // Item animation settings
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.4 }
-    },
-    exit: { 
-      opacity: 0, 
-      y: -10,
-      transition: { duration: 0.3 }
-    },
-    hover: { y: -5, transition: { duration: 0.2 } }
-  };
-
   return (
     <div className="w-full">
       {/* Filter Tabs */}
-      {allTags.length > 0 && (
-        <div className="mb-10 overflow-x-auto">
-          <div className="flex space-x-3 min-w-max pb-2">
+      <div className="mb-10">
+        {/* Status Filter */}
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-3">Stato Progetto</h3>
+          <div className="flex flex-wrap gap-3">
             <motion.button
-              className={`px-4 py-2 rounded-lg font-medium border ${
-                filter === 'all' 
+              className={`px-4 py-2 rounded-lg font-medium border flex items-center ${
+                statusFilter === 'all' 
                   ? 'bg-primary-500 text-white border-primary-500' 
                   : 'border-light-300 text-dark-600 hover:border-primary-500 hover:text-primary-500'
               } transition-colors duration-300`}
-              onClick={() => handleFilterChange('all')}
+              onClick={() => handleStatusFilterChange('all')}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
             >
-              All
+              Tutti
             </motion.button>
             
-            {allTags.map(tag => (
+            <motion.button
+              className={`px-4 py-2 rounded-lg font-medium border flex items-center ${
+                statusFilter === 'completed' 
+                  ? 'bg-green-500 text-white border-green-500' 
+                  : 'border-light-300 text-dark-600 hover:border-green-500 hover:text-green-700'
+              } transition-colors duration-300`}
+              onClick={() => handleStatusFilterChange('completed')}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <FaCheck className="mr-2" /> Completati
+            </motion.button>
+            
+            <motion.button
+              className={`px-4 py-2 rounded-lg font-medium border flex items-center ${
+                statusFilter === 'in-progress' 
+                  ? 'bg-blue-500 text-white border-blue-500' 
+                  : 'border-light-300 text-dark-600 hover:border-blue-500 hover:text-blue-700'
+              } transition-colors duration-300`}
+              onClick={() => handleStatusFilterChange('in-progress')}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <FaSpinner className="mr-2" /> In Corso
+            </motion.button>
+            
+            <motion.button
+              className={`px-4 py-2 rounded-lg font-medium border flex items-center ${
+                statusFilter === 'planning' 
+                  ? 'bg-yellow-500 text-white border-yellow-500' 
+                  : 'border-light-300 text-dark-600 hover:border-yellow-500 hover:text-yellow-700'
+              } transition-colors duration-300`}
+              onClick={() => handleStatusFilterChange('planning')}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <FaRegClock className="mr-2" /> In Pianificazione
+            </motion.button>
+          </div>
+        </div>
+        
+        {/* Tag Filters */}
+        {allTags.length > 0 && (
+          <div>
+            <h3 className="text-lg font-medium mb-3">Tecnologie</h3>
+            <div className="flex space-x-3 overflow-x-auto pb-2">
               <motion.button
-                key={tag}
                 className={`px-4 py-2 rounded-lg font-medium border ${
-                  filter === tag 
+                  filter === 'all' 
                     ? 'bg-primary-500 text-white border-primary-500' 
                     : 'border-light-300 text-dark-600 hover:border-primary-500 hover:text-primary-500'
                 } transition-colors duration-300`}
-                onClick={() => handleFilterChange(tag)}
+                onClick={() => handleTagFilterChange('all')}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
-                {tag}
+                Tutti
               </motion.button>
-            ))}
+              
+              {allTags.map(tag => (
+                <motion.button
+                  key={tag}
+                  className={`px-4 py-2 rounded-lg font-medium border whitespace-nowrap ${
+                    filter === tag 
+                      ? 'bg-primary-500 text-white border-primary-500' 
+                      : 'border-light-300 text-dark-600 hover:border-primary-500 hover:text-primary-500'
+                  } transition-colors duration-300`}
+                  onClick={() => handleTagFilterChange(tag)}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {tag}
+                </motion.button>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
       
       {/* Loading State */}
       {loading && (
@@ -180,14 +241,17 @@ const ProjectGrid = () => {
         >
           <div className="card p-8 text-center">
             <p className="mb-4">
-              {filter === 'all' 
+              {filter === 'all' && statusFilter === 'all'
                 ? 'No projects available at the moment.'
-                : `No projects found with the tag "${filter}".`}
+                : `No projects found with the selected filters.`}
             </p>
-            {filter !== 'all' && (
+            {(filter !== 'all' || statusFilter !== 'all') && (
               <motion.button
                 className="btn-primary"
-                onClick={() => setFilter('all')}
+                onClick={() => {
+                  setFilter('all');
+                  setStatusFilter('all');
+                }}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
@@ -208,62 +272,7 @@ const ProjectGrid = () => {
           exit="exit"
         >
           {filteredProjects.map((project, index) => (
-            <motion.div 
-              key={project.id}
-              variants={itemVariants}
-              whileHover="hover"
-              layout
-            >
-              <Link to={`/projects/${project.id}`}>
-                <div className="card overflow-hidden group cursor-pointer h-full">
-                  {/* Project Image */}
-                  <div className="aspect-project w-full overflow-hidden relative">
-                    <img 
-                      src={project.imageUrl || "/api/placeholder/400/250"} 
-                      alt={project.title} 
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    
-                    {/* Project Number */}
-                    <div className="absolute bottom-4 left-4">
-                      <div className="project-number">
-                        {String(index + 1).padStart(2, '0')}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Project Info */}
-                  <div className="p-4">
-                    <h3 className="font-bold text-xl mb-2 transition-colors duration-300 group-hover:text-primary-500">
-                      {project.title}
-                    </h3>
-                    
-                    <p className="text-dark-500 line-clamp-2">
-                      {project.description}
-                    </p>
-                    
-                    {/* Tags */}
-                    {project.tags && project.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {project.tags.slice(0, 3).map((tag, tagIndex) => (
-                          <span 
-                            key={tagIndex} 
-                            className="skill-tag bg-light-100 text-dark-600"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                        {project.tags.length > 3 && (
-                          <span className="skill-tag bg-light-100 text-dark-600">
-                            +{project.tags.length - 3}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
+            <ProjectCard key={project.id} project={project} index={index} />
           ))}
         </motion.div>
       )}

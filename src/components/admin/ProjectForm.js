@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaPlus, FaTimes, FaSave, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaTimes, FaSave, FaTrash, FaUserFriends, FaCodeBranch, FaCalendarAlt } from 'react-icons/fa';
 import { useFirestore } from '../../hooks/useFirestore';
 import { glassCardVariant } from '../../utils/animations';
+import ReactMarkdown from 'react-markdown';
 
 const ProjectForm = ({ project = null }) => {
   const { addDocument, updateDocument, deleteDocument, loading } = useFirestore('projects');
@@ -21,8 +22,17 @@ const ProjectForm = ({ project = null }) => {
     features: [],
     repoUrl: '',
     demoUrl: '',
-    date: new Date()
+    date: new Date(),
+    status: 'completed', // completed, in-progress, planning
+    teamMembers: [],
+    client: '',
+    duration: '',
+    challenges: '',
+    solution: ''
   });
+  
+  // Preview mode for markdown
+  const [previewMode, setPreviewMode] = useState(false);
   
   // Form validation state
   const [errors, setErrors] = useState({});
@@ -31,9 +41,17 @@ const ProjectForm = ({ project = null }) => {
   const [tagInput, setTagInput] = useState('');
   const [featureInput, setFeatureInput] = useState('');
   const [imageInput, setImageInput] = useState('');
+  const [teamMemberInput, setTeamMemberInput] = useState('');
   
   // Toast notification state
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  
+  // Status options
+  const statusOptions = [
+    { value: 'completed', label: 'Completato' },
+    { value: 'in-progress', label: 'In Corso' },
+    { value: 'planning', label: 'In Pianificazione' }
+  ];
   
   // Populate form data when editing
   useEffect(() => {
@@ -43,7 +61,13 @@ const ProjectForm = ({ project = null }) => {
         date: project.date ? project.date : new Date(),
         images: project.images || [project.imageUrl || ''],
         tags: project.tags || [],
-        features: project.features || []
+        features: project.features || [],
+        teamMembers: project.teamMembers || [],
+        status: project.status || 'completed',
+        client: project.client || '',
+        duration: project.duration || '',
+        challenges: project.challenges || '',
+        solution: project.solution || ''
       });
     }
   }, [project]);
@@ -85,6 +109,25 @@ const ProjectForm = ({ project = null }) => {
     setFormData(prev => ({
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+  
+  // Add team member
+  const handleAddTeamMember = () => {
+    if (teamMemberInput.trim() && !formData.teamMembers.includes(teamMemberInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        teamMembers: [...prev.teamMembers, teamMemberInput.trim()]
+      }));
+      setTeamMemberInput('');
+    }
+  };
+  
+  // Remove team member
+  const handleRemoveTeamMember = (memberToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      teamMembers: prev.teamMembers.filter(member => member !== memberToRemove)
     }));
   };
   
@@ -182,7 +225,13 @@ const ProjectForm = ({ project = null }) => {
           features: [],
           repoUrl: '',
           demoUrl: '',
-          date: new Date()
+          date: new Date(),
+          status: 'completed',
+          teamMembers: [],
+          client: '',
+          duration: '',
+          challenges: '',
+          solution: ''
         });
       }
     } catch (error) {
@@ -210,6 +259,11 @@ const ProjectForm = ({ project = null }) => {
   // Handle cancel
   const handleCancel = () => {
     navigate('/admin');
+  };
+  
+  // Toggle preview mode
+  const togglePreviewMode = () => {
+    setPreviewMode(!previewMode);
   };
   
   return (
@@ -241,233 +295,448 @@ const ProjectForm = ({ project = null }) => {
           </motion.div>
         )}
         
-        {/* Title */}
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium mb-1">
-            Titolo <span className="text-red-400">*</span>
-          </label>
-          <input
-            type="text"
-            id="title"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            className={`w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 ${
-              errors.title ? 'border-red-400' : 'border-light-200'
-            }`}
-            placeholder="Titolo del progetto"
-          />
-          {errors.title && <p className="mt-1 text-sm text-red-400">{errors.title}</p>}
-        </div>
-        
-        {/* Description */}
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium mb-1">
-            Descrizione <span className="text-red-400">*</span>
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleInputChange}
-            rows="6"
-            className={`w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 ${
-              errors.description ? 'border-red-400' : 'border-light-200'
-            }`}
-            placeholder="Descrizione dettagliata del progetto"
-          ></textarea>
-          {errors.description && <p className="mt-1 text-sm text-red-400">{errors.description}</p>}
-        </div>
-        
-        {/* Images */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Immagini <span className="text-red-400">*</span>
-          </label>
-          <div className="flex items-center mb-2">
+        {/* Basic Info Section */}
+        <div className="p-4 glass mb-4">
+          <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary-300 to-secondary-300 bg-clip-text text-transparent">
+            Informazioni Base
+          </h3>
+          
+          {/* Title */}
+          <div className="mb-4">
+            <label htmlFor="title" className="block text-sm font-medium mb-1">
+              Titolo <span className="text-red-400">*</span>
+            </label>
             <input
               type="text"
-              value={imageInput}
-              onChange={(e) => setImageInput(e.target.value)}
-              className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
-              placeholder="URL dell'immagine"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleInputChange}
+              className={`w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 ${
+                errors.title ? 'border-red-400' : 'border-light-200'
+              }`}
+              placeholder="Titolo del progetto"
             />
-            <motion.button
-              type="button"
-              onClick={handleAddImage}
-              className="glass-button ml-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaPlus />
-            </motion.button>
+            {errors.title && <p className="mt-1 text-sm text-red-400">{errors.title}</p>}
           </div>
-          {errors.images && <p className="mt-1 text-sm text-red-400">{errors.images}</p>}
           
-          {/* Image previews */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-            {formData.images.map((image, index) => (
-              <div key={index} className="relative group">
-                <img
-                  src={image || "/api/placeholder/100/100"}
-                  alt={`Preview ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-lg border border-light-200"
+          {/* Client */}
+          <div className="mb-4">
+            <label htmlFor="client" className="block text-sm font-medium mb-1">
+              Cliente
+            </label>
+            <input
+              type="text"
+              id="client"
+              name="client"
+              value={formData.client}
+              onChange={handleInputChange}
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+              placeholder="Nome del cliente o azienda"
+            />
+          </div>
+          
+          {/* Status */}
+          <div className="mb-4">
+            <label htmlFor="status" className="block text-sm font-medium mb-1">
+              Stato del Progetto
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleInputChange}
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+            >
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Duration */}
+          <div>
+            <label htmlFor="duration" className="block text-sm font-medium mb-1">
+              Durata
+            </label>
+            <input
+              type="text"
+              id="duration"
+              name="duration"
+              value={formData.duration}
+              onChange={handleInputChange}
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+              placeholder="Es. 2 mesi, Gennaio - Marzo 2023"
+            />
+          </div>
+        </div>
+        
+        {/* Description Section */}
+        <div className="p-4 glass mb-4">
+          <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary-300 to-secondary-300 bg-clip-text text-transparent">
+            Descrizione
+          </h3>
+          
+          {/* Description Toggle */}
+          <div className="flex justify-end mb-2">
+            <div className="flex items-center space-x-2">
+              <span className={`text-sm ${!previewMode ? 'text-primary-400 font-bold' : 'text-dark-400'}`}>
+                Editor
+              </span>
+              <button
+                type="button"
+                onClick={togglePreviewMode}
+                className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none bg-dark-300"
+              >
+                <span
+                  className={`${
+                    previewMode ? 'translate-x-6' : 'translate-x-1'
+                  } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
                 />
-                <motion.button
-                  type="button"
-                  onClick={() => handleRemoveImage(index)}
-                  className="absolute top-2 right-2 glass p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <FaTimes size={12} />
-                </motion.button>
-                {index === 0 && (
-                  <span className="absolute bottom-2 left-2 glass px-2 py-1 rounded text-xs">
-                    Principale
-                  </span>
-                )}
+              </button>
+              <span className={`text-sm ${previewMode ? 'text-primary-400 font-bold' : 'text-dark-400'}`}>
+                Anteprima
+              </span>
+            </div>
+          </div>
+          
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium mb-1">
+              Descrizione <span className="text-red-400">*</span>
+            </label>
+            
+            {previewMode ? (
+              <div className="glass p-4 min-h-[200px] prose prose-sm max-w-none">
+                <ReactMarkdown>
+                  {formData.description}
+                </ReactMarkdown>
               </div>
-            ))}
+            ) : (
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows="8"
+                className={`w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 font-mono ${
+                  errors.description ? 'border-red-400' : 'border-light-200'
+                }`}
+                placeholder="Descrizione dettagliata del progetto. Supporta la formattazione Markdown: **grassetto**, *corsivo*, ## titoli, elenchi e link [testo](url)"
+              ></textarea>
+            )}
+            
+            {errors.description && <p className="mt-1 text-sm text-red-400">{errors.description}</p>}
+            
+            <div className="mt-2 text-xs text-dark-400">
+              <p>Supporta Markdown: **grassetto**, *corsivo*, ## titoli, - elenchi, [link](url)</p>
+            </div>
+          </div>
+          
+          {/* Challenges */}
+          <div className="mt-4">
+            <label htmlFor="challenges" className="block text-sm font-medium mb-1">
+              Sfide
+            </label>
+            <textarea
+              id="challenges"
+              name="challenges"
+              value={formData.challenges}
+              onChange={handleInputChange}
+              rows="4"
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 font-mono"
+              placeholder="Descrivi le sfide affrontate durante lo sviluppo"
+            ></textarea>
+          </div>
+          
+          {/* Solution */}
+          <div className="mt-4">
+            <label htmlFor="solution" className="block text-sm font-medium mb-1">
+              Soluzione
+            </label>
+            <textarea
+              id="solution"
+              name="solution"
+              value={formData.solution}
+              onChange={handleInputChange}
+              rows="4"
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 font-mono"
+              placeholder="Descrivi le soluzioni adottate"
+            ></textarea>
           </div>
         </div>
         
-        {/* Tags */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Tag <span className="text-red-400">*</span>
-          </label>
-          <div className="flex items-center mb-2">
-            <input
-              type="text"
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
-              placeholder="Aggiungi un tag (es. React, Firebase)"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddTag();
-                }
-              }}
-            />
-            <motion.button
-              type="button"
-              onClick={handleAddTag}
-              className="glass-button ml-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaPlus />
-            </motion.button>
-          </div>
-          {errors.tags && <p className="mt-1 text-sm text-red-400">{errors.tags}</p>}
+        {/* Images Section */}
+        <div className="p-4 glass mb-4">
+          <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary-300 to-secondary-300 bg-clip-text text-transparent">
+            Immagini
+          </h3>
           
-          <div className="flex flex-wrap gap-2 mt-2">
-            {formData.tags.map((tag, index) => (
-              <motion.span
-                key={index}
-                className="glass px-3 py-1 rounded-full text-sm inline-flex items-center"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
+          {/* Images */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Immagini <span className="text-red-400">*</span>
+            </label>
+            <div className="flex items-center mb-2">
+              <input
+                type="text"
+                value={imageInput}
+                onChange={(e) => setImageInput(e.target.value)}
+                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                placeholder="URL dell'immagine"
+              />
+              <motion.button
+                type="button"
+                onClick={handleAddImage}
+                className="glass-button ml-2"
                 whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTag(tag)}
-                  className="ml-2 text-light-700 hover:text-white"
-                >
-                  <FaTimes size={12} />
-                </button>
-              </motion.span>
-            ))}
+                <FaPlus />
+              </motion.button>
+            </div>
+            {errors.images && <p className="mt-1 text-sm text-red-400">{errors.images}</p>}
+            
+            {/* Image previews */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+              {formData.images.map((image, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={image || "/api/placeholder/100/100"}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border border-light-200"
+                  />
+                  <motion.button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute top-2 right-2 glass p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <FaTimes size={12} />
+                  </motion.button>
+                  {index === 0 && (
+                    <span className="absolute bottom-2 left-2 glass px-2 py-1 rounded text-xs">
+                      Principale
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         
-        {/* Features */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Caratteristiche
-          </label>
-          <div className="flex items-center mb-2">
-            <input
-              type="text"
-              value={featureInput}
-              onChange={(e) => setFeatureInput(e.target.value)}
-              className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
-              placeholder="Aggiungi una caratteristica del progetto"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddFeature();
-                }
-              }}
-            />
-            <motion.button
-              type="button"
-              onClick={handleAddFeature}
-              className="glass-button ml-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <FaPlus />
-            </motion.button>
+        {/* Features and Tags Section */}
+        <div className="p-4 glass mb-4">
+          <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary-300 to-secondary-300 bg-clip-text text-transparent">
+            Features e Tecnologie
+          </h3>
+          
+          {/* Tags */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-1">
+              Tag <span className="text-red-400">*</span>
+            </label>
+            <div className="flex items-center mb-2">
+              <input
+                type="text"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                placeholder="Aggiungi un tag (es. React, Firebase)"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  }
+                }}
+              />
+              <motion.button
+                type="button"
+                onClick={handleAddTag}
+                className="glass-button ml-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaPlus />
+              </motion.button>
+            </div>
+            {errors.tags && <p className="mt-1 text-sm text-red-400">{errors.tags}</p>}
+            
+            <div className="flex flex-wrap gap-2 mt-2">
+              {formData.tags.map((tag, index) => (
+                <motion.span
+                  key={index}
+                  className="glass px-3 py-1 rounded-full text-sm inline-flex items-center"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    className="ml-2 text-light-700 hover:text-white"
+                  >
+                    <FaTimes size={12} />
+                  </button>
+                </motion.span>
+              ))}
+            </div>
           </div>
           
-          <ul className="space-y-2 mt-2">
-            {formData.features.map((feature, index) => (
-              <motion.li
-                key={index}
-                className="glass p-2 rounded-lg flex items-center justify-between"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+          {/* Features */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Caratteristiche
+            </label>
+            <div className="flex items-center mb-2">
+              <input
+                type="text"
+                value={featureInput}
+                onChange={(e) => setFeatureInput(e.target.value)}
+                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                placeholder="Aggiungi una caratteristica del progetto"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddFeature();
+                  }
+                }}
+              />
+              <motion.button
+                type="button"
+                onClick={handleAddFeature}
+                className="glass-button ml-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
-                <span>{feature}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFeature(feature)}
-                  className="text-light-700 hover:text-white"
+                <FaPlus />
+              </motion.button>
+            </div>
+            
+            <ul className="space-y-2 mt-2">
+              {formData.features.map((feature, index) => (
+                <motion.li
+                  key={index}
+                  className="glass p-2 rounded-lg flex items-center justify-between"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                 >
-                  <FaTimes size={16} />
-                </button>
-              </motion.li>
-            ))}
-          </ul>
+                  <span>{feature}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(feature)}
+                    className="text-light-700 hover:text-white"
+                  >
+                    <FaTimes size={16} />
+                  </button>
+                </motion.li>
+              ))}
+            </ul>
+          </div>
         </div>
         
-        {/* Repository URL */}
-        <div>
-          <label htmlFor="repoUrl" className="block text-sm font-medium mb-1">
-            URL Repository
-          </label>
-          <input
-            type="url"
-            id="repoUrl"
-            name="repoUrl"
-            value={formData.repoUrl}
-            onChange={handleInputChange}
-            className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
-            placeholder="https://github.com/username/repository"
-          />
+        {/* Team Section */}
+        <div className="p-4 glass mb-4">
+          <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary-300 to-secondary-300 bg-clip-text text-transparent flex items-center">
+            <FaUserFriends className="mr-2" /> Team
+          </h3>
+          
+          {/* Team Members */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Membri del Team
+            </label>
+            <div className="flex items-center mb-2">
+              <input
+                type="text"
+                value={teamMemberInput}
+                onChange={(e) => setTeamMemberInput(e.target.value)}
+                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                placeholder="Nome e ruolo (es. Marco Rossi - UI Designer)"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTeamMember();
+                  }
+                }}
+              />
+              <motion.button
+                type="button"
+                onClick={handleAddTeamMember}
+                className="glass-button ml-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FaPlus />
+              </motion.button>
+            </div>
+            
+            <ul className="space-y-2 mt-2">
+              {formData.teamMembers.map((member, index) => (
+                <motion.li
+                  key={index}
+                  className="glass p-2 rounded-lg flex items-center justify-between"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                >
+                  <span>{member}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTeamMember(member)}
+                    className="text-light-700 hover:text-white"
+                  >
+                    <FaTimes size={16} />
+                  </button>
+                </motion.li>
+              ))}
+            </ul>
+          </div>
         </div>
         
-        {/* Demo URL */}
-        <div>
-          <label htmlFor="demoUrl" className="block text-sm font-medium mb-1">
-            URL Demo
-          </label>
-          <input
-            type="url"
-            id="demoUrl"
-            name="demoUrl"
-            value={formData.demoUrl}
-            onChange={handleInputChange}
-            className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
-            placeholder="https://demo-site.com"
-          />
+        {/* Links Section */}
+        <div className="p-4 glass mb-4">
+          <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-primary-300 to-secondary-300 bg-clip-text text-transparent">
+            Link
+          </h3>
+          
+          {/* Repository URL */}
+          <div className="mb-4">
+            <label htmlFor="repoUrl" className="block text-sm font-medium mb-1">
+              URL Repository
+            </label>
+            <input
+              type="url"
+              id="repoUrl"
+              name="repoUrl"
+              value={formData.repoUrl}
+              onChange={handleInputChange}
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+              placeholder="https://github.com/username/repository"
+            />
+          </div>
+          
+          {/* Demo URL */}
+          <div>
+            <label htmlFor="demoUrl" className="block text-sm font-medium mb-1">
+              URL Demo
+            </label>
+            <input
+              type="url"
+              id="demoUrl"
+              name="demoUrl"
+              value={formData.demoUrl}
+              onChange={handleInputChange}
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+              placeholder="https://demo-site.com"
+            />
+          </div>
         </div>
         
         {/* Action Buttons */}
