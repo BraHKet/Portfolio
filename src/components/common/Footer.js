@@ -20,7 +20,7 @@ const Footer = () => {
     },
     {
       name: 'Email',
-      url: 'mailto:lore.mail.gl@gmail.com',
+      url: '',
       icon: <FaEnvelope size={18} />
     }
   ];
