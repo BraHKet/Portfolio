@@ -64,7 +64,7 @@ const Home = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              Latest Projects
+              Ultimi progetti
             </motion.h2>
             
             <motion.div

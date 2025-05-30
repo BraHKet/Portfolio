@@ -203,7 +203,7 @@ const ProjectGrid = () => {
           <div className="card p-8">
             <div className="flex flex-col items-center">
               <div className="w-12 h-12 border-t-4 border-b-4 border-primary-500 rounded-full animate-spin"></div>
-              <p className="mt-4 text-dark-600">Loading projects...</p>
+              <p className="mt-4 text-dark-600">Caricamento progetti...</p>
             </div>
           </div>
         </motion.div>

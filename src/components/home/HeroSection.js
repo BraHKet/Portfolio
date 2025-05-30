@@ -54,7 +54,7 @@ const HeroSection = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
             >
-              <span className="font-bold mr-2">10+</span> 
+              <span className="font-bold mr-2">5+</span> 
               <span className="text-sm">Completed Projects</span>
             </motion.div>
             
@@ -64,7 +64,7 @@ const HeroSection = () => {
               transition={{ delay: 0.8, duration: 0.8 }}
             >
               <Link to="/projects">
-                <button className="btn-primary">View Projects</button>
+                <button className="btn-primary">Lista progetti</button>
               </Link>
             </motion.div>
           </motion.div>

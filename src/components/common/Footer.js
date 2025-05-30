@@ -10,17 +10,17 @@ const Footer = () => {
   const socialLinks = [
     {
       name: 'GitHub',
-      url: 'https://github.com/yourusername',
+      url: '',
       icon: <FaGithub size={18} />
     },
     {
       name: 'LinkedIn',
-      url: 'https://linkedin.com/in/yourprofile',
+      url: 'https://www.linkedin.com/in/lorenzo-rizzo-a97878184/',
       icon: <FaLinkedin size={18} />
     },
     {
       name: 'Email',
-      url: 'mailto:your.email@example.com',
+      url: 'mailto:lore.mail.gl@gmail.com',
       icon: <FaEnvelope size={18} />
     }
   ];
@@ -56,7 +56,7 @@ const Footer = () => {
                 Home
               </Link>
               <Link to="/projects" className="text-dark-500 hover:text-primary-500 transition-colors duration-300 text-sm">
-                Projects
+                Progetti
               </Link>
               <Link to="/login" className="text-dark-500 hover:text-primary-500 transition-colors duration-300 text-sm">
                 Login
