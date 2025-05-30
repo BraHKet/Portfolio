@@ -19,11 +19,10 @@ const Projects = () => {
         transition={{ duration: 0.6 }}
       >
         <h1 className="text-3xl md:text-4xl font-bold mb-4">
-          My Projects
+          I miei progetti
         </h1>
         <p className="text-dark-500 max-w-2xl">
-          Explore the projects I've worked on, from web applications to computational physics simulations.
-          Each project represents a unique challenge and solution.
+          Esplora i progetti a cui sto lavorando!
         </p>
       </motion.div>
       

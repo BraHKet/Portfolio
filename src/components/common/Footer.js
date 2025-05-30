@@ -10,7 +10,7 @@ const Footer = () => {
   const socialLinks = [
     {
       name: 'GitHub',
-      url: 'https://www.linkedin.com/in/lorenzo-rizzo-a97878184/',
+      url: '',
       icon: <FaGithub size={18} />
     },
     {
@@ -57,9 +57,6 @@ const Footer = () => {
               </Link>
               <Link to="/projects" className="text-dark-500 hover:text-primary-500 transition-colors duration-300 text-sm">
                 Progetti
-              </Link>
-              <Link to="/login" className="text-dark-500 hover:text-primary-500 transition-colors duration-300 text-sm">
-                Login
               </Link>
             </div>
             
