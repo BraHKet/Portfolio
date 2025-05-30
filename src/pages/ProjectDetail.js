@@ -330,9 +330,9 @@ const ProjectDetail = () => {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
               >
-                <h3 className="text-xl font-bold mb-4">More Projects</h3>
+                <h3 className="text-xl font-bold mb-4">Altri Progetti</h3>
                 <Link to="/projects" className="btn-primary w-full flex items-center justify-center">
-                  View All Projects <FaArrowRight className="ml-2" />
+                  Lista Progetti <FaArrowRight className="ml-2" />
                 </Link>
               </motion.div>
             </div>

@@ -25,23 +25,28 @@ export const AuthProvider = ({ children }) => {
     return firebaseSignOut(auth);
   };
 
-  // Check if user is admin
+  // Check if user is admin usando custom claims (SICURO)
   const checkAdminStatus = async (user) => {
-  if (!user) {
-    setIsAdmin(false);
-    return;
-  }
-  
-  // Soluzione temporanea: considera questo utente specifico come admin
-  if (user.email === 'lore.mail.gl@gmail.com') {
-    setIsAdmin(true);
-    return;
-  }
-  
-  // Ottieni il token ID con claims aggiornati
-  const token = await user.getIdTokenResult(true);
-  setIsAdmin(!!token.claims.admin);
-};
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    
+    try {
+      // Ottieni il token ID con claims aggiornati
+      const token = await user.getIdTokenResult(true);
+      const isUserAdmin = !!token.claims.admin;
+      setIsAdmin(isUserAdmin);
+      
+      // Log solo in sviluppo
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Admin status:', isUserAdmin);
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    }
+  };
 
   // Effect to handle auth state changes
   useEffect(() => {

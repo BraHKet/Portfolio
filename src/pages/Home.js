@@ -146,7 +146,7 @@ const Home = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              Let's Work Together
+              Lavoriamo Insieme
             </motion.h2>
             
             <motion.p 
@@ -155,8 +155,7 @@ const Home = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              Looking for a developer who combines technical expertise with creative problem-solving?
-              I specialize in building modern web applications with React and Firebase.
+              Hai un’idea, un progetto in mente o semplicemente una passione per il mondo delle startup? Uniamo le forze e creiamo qualcosa di grande insieme! Cerco persone con voglia di fare e spirito di squadra: costruiamo un TEAM!
             </motion.p>
             
             <motion.div
@@ -165,7 +164,7 @@ const Home = () => {
               transition={{ delay: 0.4, duration: 0.5 }}
             >
               <a href="mailto:your.email@example.com">
-                <button className="btn-primary px-8 py-3 text-lg">Get in Touch</button>
+                <button className="btn-primary px-8 py-3 text-lg">Contattami</button>
               </a>
             </motion.div>
           </div>
