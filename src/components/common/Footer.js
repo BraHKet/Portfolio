@@ -69,7 +69,7 @@ const Footer = () => {
                 <motion.a
                   key={link.name}
                   href={link.url}
-                  target={link.url.startsWith("mailto:") ? "_self" : "_blank"}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-dark-500 hover:text-primary-500 transition-colors duration-300"
                   initial={{ opacity: 0 }}
