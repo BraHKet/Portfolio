@@ -10,7 +10,7 @@ const Footer = () => {
   const socialLinks = [
     {
       name: 'GitHub',
-      url: '',
+      url: 'https://www.linkedin.com/in/lorenzo-rizzo-a97878184/',
       icon: <FaGithub size={18} />
     },
     {
