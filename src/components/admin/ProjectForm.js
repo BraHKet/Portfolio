@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaTimes, FaSave, FaTrash, FaUserFriends, FaCodeBranch, FaCalendarAlt } from 'react-icons/fa';
 import { useFirestore } from '../../hooks/useFirestore';
 import { glassCardVariant } from '../../utils/animations';
@@ -10,7 +10,7 @@ const ProjectForm = ({ project = null }) => {
   const { addDocument, updateDocument, deleteDocument, loading } = useFirestore('projects');
   const navigate = useNavigate();
   const { id } = useParams();
-  const isEditing = !!project;
+  const isEditing = !!project || !!id;
   
   // Form state
   const [formData, setFormData] = useState({
@@ -46,34 +46,58 @@ const ProjectForm = ({ project = null }) => {
   // Toast notification state
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
   
-  // Status options - UPDATED: replaced 'planning' with 'archived'
+  // Status options
   const statusOptions = [
     { value: 'completed', label: 'Completato' },
     { value: 'in-progress', label: 'In Corso' },
     { value: 'archived', label: 'Archiviato' }
   ];
   
-  // Populate form data when editing
+  // Populate form data when editing - FIXED: Proper data handling
   useEffect(() => {
+    console.log('🔄 ProjectForm useEffect - project:', project);
     if (project) {
-      setFormData({
-        ...project,
-        date: project.date ? project.date : new Date(),
-        images: project.images || [project.imageUrl || ''],
+      console.log('📝 Populating form with project data:', project);
+      
+      // Handle date conversion properly
+      let projectDate = new Date();
+      if (project.date) {
+        if (project.date.seconds) {
+          // Firestore Timestamp
+          projectDate = new Date(project.date.seconds * 1000);
+        } else if (project.date instanceof Date) {
+          projectDate = project.date;
+        } else {
+          projectDate = new Date(project.date);
+        }
+      }
+      
+      const updatedFormData = {
+        title: project.title || '',
+        description: project.description || '',
+        imageUrl: project.imageUrl || '',
+        images: project.images || (project.imageUrl ? [project.imageUrl] : []),
         tags: project.tags || [],
         features: project.features || [],
-        teamMembers: project.teamMembers || [],
+        repoUrl: project.repoUrl || '',
+        demoUrl: project.demoUrl || '',
+        date: projectDate,
         status: project.status || 'completed',
+        teamMembers: project.teamMembers || [],
         client: project.client || '',
         duration: project.duration || '',
         challenges: project.challenges || '',
         solution: project.solution || ''
-      });
+      };
+      
+      console.log('📝 Updated form data:', updatedFormData);
+      setFormData(updatedFormData);
     }
   }, [project]);
   
   // Show toast notification
   const showToast = (message, type = 'success') => {
+    console.log(`🍞 Toast: ${type} - ${message}`);
     setToast({ show: true, message, type });
     
     // Hide toast after 3 seconds
@@ -85,7 +109,13 @@ const ProjectForm = ({ project = null }) => {
   // Form input change handler
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    console.log(`📝 Input change: ${name} = ${value}`);
+    
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      console.log('📝 Updated form data:', updated);
+      return updated;
+    });
     
     // Clear error when field is updated
     if (errors[name]) {
@@ -101,6 +131,7 @@ const ProjectForm = ({ project = null }) => {
         tags: [...prev.tags, tagInput.trim()]
       }));
       setTagInput('');
+      console.log('🏷️ Added tag:', tagInput.trim());
     }
   };
   
@@ -110,6 +141,7 @@ const ProjectForm = ({ project = null }) => {
       ...prev,
       tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
+    console.log('🗑️ Removed tag:', tagToRemove);
   };
   
   // Add team member
@@ -120,6 +152,7 @@ const ProjectForm = ({ project = null }) => {
         teamMembers: [...prev.teamMembers, teamMemberInput.trim()]
       }));
       setTeamMemberInput('');
+      console.log('👥 Added team member:', teamMemberInput.trim());
     }
   };
   
@@ -129,6 +162,7 @@ const ProjectForm = ({ project = null }) => {
       ...prev,
       teamMembers: prev.teamMembers.filter(member => member !== memberToRemove)
     }));
+    console.log('🗑️ Removed team member:', memberToRemove);
   };
   
   // Add feature
@@ -139,6 +173,7 @@ const ProjectForm = ({ project = null }) => {
         features: [...prev.features, featureInput.trim()]
       }));
       setFeatureInput('');
+      console.log('✨ Added feature:', featureInput.trim());
     }
   };
   
@@ -148,6 +183,7 @@ const ProjectForm = ({ project = null }) => {
       ...prev,
       features: prev.features.filter(feature => feature !== featureToRemove)
     }));
+    console.log('🗑️ Removed feature:', featureToRemove);
   };
   
   // Add image URL
@@ -158,6 +194,7 @@ const ProjectForm = ({ project = null }) => {
         images: [...prev.images, imageInput.trim()]
       }));
       setImageInput('');
+      console.log('🖼️ Added image:', imageInput.trim());
     }
   };
   
@@ -167,6 +204,7 @@ const ProjectForm = ({ project = null }) => {
       ...prev,
       images: prev.images.filter((_, i) => i !== index)
     }));
+    console.log('🗑️ Removed image at index:', index);
   };
   
   // Form validation
@@ -190,12 +228,15 @@ const ProjectForm = ({ project = null }) => {
     }
     
     setErrors(newErrors);
+    console.log('✅ Form validation errors:', newErrors);
     return Object.keys(newErrors).length === 0;
   };
   
-  // Form submission
+  // Form submission - FIXED: Proper data preparation and error handling
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('🚀 Form submission started');
+    console.log('📊 Current form data:', formData);
     
     if (!validateForm()) {
       showToast('Correggi gli errori nel form', 'error');
@@ -203,40 +244,70 @@ const ProjectForm = ({ project = null }) => {
     }
     
     try {
-      // Prepare data for submission
+      // Prepare data for submission - FIXED: Proper data structure
       const projectData = {
         ...formData,
-        imageUrl: formData.images[0] // Set first image as main image
+        imageUrl: formData.images[0] || '', // Set first image as main image
+        updatedAt: new Date() // Always add updated timestamp
       };
       
+      // Remove any undefined values and clean data
+      Object.keys(projectData).forEach(key => {
+        if (projectData[key] === undefined) {
+          delete projectData[key];
+        }
+      });
+      
+      console.log('💾 Prepared project data for submission:', projectData);
+      
       if (isEditing) {
-        await updateDocument(id, projectData);
-        showToast('Progetto aggiornato con successo!');
+        console.log('📝 Updating project with ID:', id);
+        const result = await updateDocument(id, projectData);
+        console.log('✅ Update result:', result);
+        
+        if (result) {
+          showToast('Progetto aggiornato con successo!');
+          // Navigate back to admin after successful update
+          setTimeout(() => {
+            navigate('/admin');
+          }, 1500);
+        } else {
+          throw new Error('Update failed');
+        }
       } else {
-        await addDocument(projectData);
-        showToast('Progetto creato con successo!');
-        // Reset form after successful creation
-        setFormData({
-          title: '',
-          description: '',
-          imageUrl: '',
-          images: [],
-          tags: [],
-          features: [],
-          repoUrl: '',
-          demoUrl: '',
-          date: new Date(),
-          status: 'completed',
-          teamMembers: [],
-          client: '',
-          duration: '',
-          challenges: '',
-          solution: ''
-        });
+        console.log('🆕 Creating new project');
+        projectData.createdAt = new Date(); // Add creation timestamp for new projects
+        
+        const result = await addDocument(projectData);
+        console.log('✅ Creation result:', result);
+        
+        if (result) {
+          showToast('Progetto creato con successo!');
+          // Reset form after successful creation
+          setFormData({
+            title: '',
+            description: '',
+            imageUrl: '',
+            images: [],
+            tags: [],
+            features: [],
+            repoUrl: '',
+            demoUrl: '',
+            date: new Date(),
+            status: 'completed',
+            teamMembers: [],
+            client: '',
+            duration: '',
+            challenges: '',
+            solution: ''
+          });
+        } else {
+          throw new Error('Creation failed');
+        }
       }
     } catch (error) {
-      console.error('Error saving project:', error);
-      showToast('Si è verificato un errore durante il salvataggio', 'error');
+      console.error('❌ Error saving project:', error);
+      showToast(`Si è verificato un errore durante il salvataggio: ${error.message}`, 'error');
     }
   };
   
@@ -246,12 +317,18 @@ const ProjectForm = ({ project = null }) => {
     
     if (window.confirm('Sei sicuro di voler eliminare questo progetto? Questa azione non può essere annullata.')) {
       try {
-        await deleteDocument(id);
-        showToast('Progetto eliminato con successo!');
-        navigate('/admin');
+        console.log('🗑️ Deleting project with ID:', id);
+        const result = await deleteDocument(id);
+        
+        if (result) {
+          showToast('Progetto eliminato con successo!');
+          navigate('/admin');
+        } else {
+          throw new Error('Deletion failed');
+        }
       } catch (error) {
-        console.error('Error deleting project:', error);
-        showToast('Si è verificato un errore durante l\'eliminazione', 'error');
+        console.error('❌ Error deleting project:', error);
+        showToast(`Si è verificato un errore durante l'eliminazione: ${error.message}`, 'error');
       }
     }
   };
@@ -265,6 +342,11 @@ const ProjectForm = ({ project = null }) => {
   const togglePreviewMode = () => {
     setPreviewMode(!previewMode);
   };
+  
+  // Debug current form state
+  useEffect(() => {
+    console.log('🔍 Current form data state:', formData);
+  }, [formData]);
   
   return (
     <motion.div
@@ -280,20 +362,22 @@ const ProjectForm = ({ project = null }) => {
         </h2>
         
         {/* Toast notification */}
-        {toast.show && (
-          <motion.div
-            className={`p-4 rounded-lg mb-6 ${
-              toast.type === 'error' 
-                ? 'bg-red-400 bg-opacity-20 text-red-300' 
-                : 'bg-green-400 bg-opacity-20 text-green-300'
-            }`}
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            {toast.message}
-          </motion.div>
-        )}
+        <AnimatePresence>
+          {toast.show && (
+            <motion.div
+              className={`p-4 rounded-lg mb-6 ${
+                toast.type === 'error' 
+                  ? 'bg-red-400 bg-opacity-20 text-red-300' 
+                  : 'bg-green-400 bg-opacity-20 text-green-300'
+              }`}
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              {toast.message}
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         {/* Basic Info Section */}
         <div className="p-4 glass mb-4">
@@ -312,7 +396,7 @@ const ProjectForm = ({ project = null }) => {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              className={`w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 ${
+              className={`w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border ${
                 errors.title ? 'border-red-400' : 'border-light-200'
               }`}
               placeholder="Titolo del progetto"
@@ -331,7 +415,7 @@ const ProjectForm = ({ project = null }) => {
               name="client"
               value={formData.client}
               onChange={handleInputChange}
-              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-light-200"
               placeholder="Nome del cliente o azienda"
             />
           </div>
@@ -346,7 +430,7 @@ const ProjectForm = ({ project = null }) => {
               name="status"
               value={formData.status}
               onChange={handleInputChange}
-              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-light-200"
             >
               {statusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -367,7 +451,7 @@ const ProjectForm = ({ project = null }) => {
               name="duration"
               value={formData.duration}
               onChange={handleInputChange}
-              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-light-200"
               placeholder="Es. 2 mesi, Gennaio - Marzo 2023"
             />
           </div>
@@ -409,7 +493,7 @@ const ProjectForm = ({ project = null }) => {
             </label>
             
             {previewMode ? (
-              <div className="glass p-4 min-h-[200px] prose prose-sm max-w-none">
+              <div className="glass p-4 min-h-[200px] prose prose-sm max-w-none border border-light-200">
                 <ReactMarkdown>
                   {formData.description}
                 </ReactMarkdown>
@@ -421,7 +505,7 @@ const ProjectForm = ({ project = null }) => {
                 value={formData.description}
                 onChange={handleInputChange}
                 rows="8"
-                className={`w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 font-mono ${
+                className={`w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 font-mono border ${
                   errors.description ? 'border-red-400' : 'border-light-200'
                 }`}
                 placeholder="Descrizione dettagliata del progetto. Supporta la formattazione Markdown: **grassetto**, *corsivo*, ## titoli, elenchi e link [testo](url)"
@@ -446,7 +530,7 @@ const ProjectForm = ({ project = null }) => {
               value={formData.challenges}
               onChange={handleInputChange}
               rows="4"
-              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 font-mono"
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 font-mono border border-light-200"
               placeholder="Descrivi le sfide affrontate durante lo sviluppo"
             ></textarea>
           </div>
@@ -462,7 +546,7 @@ const ProjectForm = ({ project = null }) => {
               value={formData.solution}
               onChange={handleInputChange}
               rows="4"
-              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 font-mono"
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 font-mono border border-light-200"
               placeholder="Descrivi le soluzioni adottate"
             ></textarea>
           </div>
@@ -484,8 +568,14 @@ const ProjectForm = ({ project = null }) => {
                 type="text"
                 value={imageInput}
                 onChange={(e) => setImageInput(e.target.value)}
-                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-light-200"
                 placeholder="URL dell'immagine"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddImage();
+                  }
+                }}
               />
               <motion.button
                 type="button"
@@ -544,7 +634,7 @@ const ProjectForm = ({ project = null }) => {
                 type="text"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-light-200"
                 placeholder="Aggiungi un tag (es. React, Firebase)"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -598,7 +688,7 @@ const ProjectForm = ({ project = null }) => {
                 type="text"
                 value={featureInput}
                 onChange={(e) => setFeatureInput(e.target.value)}
-                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-light-200"
                 placeholder="Aggiungi una caratteristica del progetto"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -657,7 +747,7 @@ const ProjectForm = ({ project = null }) => {
                 type="text"
                 value={teamMemberInput}
                 onChange={(e) => setTeamMemberInput(e.target.value)}
-                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+                className="flex-grow glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-light-200"
                 placeholder="Nome e ruolo (es. Marco Rossi - UI Designer)"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -717,7 +807,7 @@ const ProjectForm = ({ project = null }) => {
               name="repoUrl"
               value={formData.repoUrl}
               onChange={handleInputChange}
-              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-light-200"
               placeholder="https://github.com/username/repository"
             />
           </div>
@@ -733,7 +823,7 @@ const ProjectForm = ({ project = null }) => {
               name="demoUrl"
               value={formData.demoUrl}
               onChange={handleInputChange}
-              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400"
+              className="w-full glass p-3 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-light-200"
               placeholder="https://demo-site.com"
             />
           </div>
@@ -776,7 +866,7 @@ const ProjectForm = ({ project = null }) => {
               disabled={loading}
             >
               <FaSave className="mr-2" />
-              {loading ? 'Saving...' : (isEditing ? 'Aggiorna' : 'Salva')}
+              {loading ? 'Salvando...' : (isEditing ? 'Aggiorna' : 'Salva')}
             </motion.button>
           </div>
         </div>
