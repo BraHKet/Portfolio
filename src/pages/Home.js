@@ -163,7 +163,7 @@ const Home = () => {
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.5 }}
             >
-              <a href="mailto:your.email@example.com">
+              <a href="mailto:lore.mail.gl@gmail.com">
                 <button className="btn-primary px-8 py-3 text-lg">Contattami</button>
               </a>
             </motion.div>
